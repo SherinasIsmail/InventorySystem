@@ -1,0 +1,1056 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex h-screen bg-gray-50 font-sans text-gray-800">
+    <aside class="w-64 bg-white border-r border-gray-200 flex flex-col z-20">
+        <div class="h-20 flex items-center px-6 border-b border-gray-100">
+            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-blue-200 shadow-lg mr-3">
+                <i class="fas fa-cube text-xl"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-gray-800 text-lg leading-tight">Store Manager</h1>
+                <p class="text-xs text-gray-400">Administrator</p>
+            </div>
+        </div>
+        
+        <nav class="flex-1 p-4 space-y-1">
+            <button onclick="switchTab('overview')" id="nav-overview" class="w-full flex items-center px-4 py-3 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-all group">
+                <i class="fas fa-chart-pie w-6 group-hover:text-blue-600 transition-colors"></i> <span class="font-medium">Overview</span>
+            </button>
+            <button onclick="switchTab('users')" id="nav-users" class="w-full flex items-center px-4 py-3 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-all group">
+                <i class="fas fa-users w-6 group-hover:text-blue-600 transition-colors"></i> <span class="font-medium">User Management</span>
+            </button>
+            <button onclick="switchTab('products')" id="nav-products" class="w-full flex items-center px-4 py-3 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-all group">
+                <i class="fas fa-box w-6 group-hover:text-blue-600 transition-colors"></i> <span class="font-medium">Product Management</span>
+            </button>
+            <button onclick="switchTab('stock')" id="nav-stock" class="w-full flex items-center px-4 py-3 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-all group">
+                <i class="fas fa-chart-line w-6 group-hover:text-blue-600 transition-colors"></i> <span class="font-medium">Stock Control</span>
+            </button>
+            <button onclick="switchTab('reports')" id="nav-reports" class="w-full flex items-center px-4 py-3 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-all group">
+                <i class="fas fa-file-alt w-6 group-hover:text-blue-600 transition-colors"></i> <span class="font-medium">Reports</span>
+            </button>
+        </nav>
+        
+        <div class="p-4 border-t border-gray-100">
+            <a href="/logout" class="flex items-center px-4 py-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors text-sm font-bold">
+                <i class="fas fa-sign-out-alt w-6"></i> Logout
+            </a>
+        </div>
+    </aside>
+
+    <main class="flex-1 h-screen overflow-y-auto relative p-8" id="main-container">
+        
+        <div id="view-overview" class="view-section space-y-8">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-gray-800">Dashboard Overview</h2>
+                <p class="text-gray-500">Welcome back, Admin. Here's what's happening with your inventory today.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+    <div onclick="jumpToAndFilter('products')" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition">
+        <div class="flex justify-between items-start mb-4">
+            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600"><i class="fas fa-box"></i></div>
+            <span class="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded">+12%</span>
+        </div>
+        <p class="text-gray-500 text-sm">Total Products</p>
+        <h3 class="text-2xl font-bold text-gray-800">{{ stats.total }}</h3>
+    </div>
+
+    <div onclick="jumpToAndFilter('reports')" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition">
+        <div class="flex justify-between items-start mb-4">
+            <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center text-green-600"><i class="fas fa-dollar-sign"></i></div>
+            <span class="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded">+23%</span>
+        </div>
+        <p class="text-gray-500 text-sm">Total Revenue</p>
+        <h3 class="text-2xl font-bold text-gray-800">₹{{ "{:,.0f}".format(stats.value) }}</h3>
+    </div>
+
+    <div onclick="jumpToAndFilter('stock', 'Low Stock')" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition">
+        <div class="flex justify-between items-start mb-4">
+            <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600"><i class="fas fa-exclamation-triangle"></i></div>
+            <span class="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded">-5%</span>
+        </div>
+        <p class="text-gray-500 text-sm">Low Stock Items</p>
+        <h3 class="text-2xl font-bold text-gray-800">{{ stats.low }}</h3>
+    </div>
+
+    <div onclick="jumpToAndFilter('users')" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition">
+        <div class="flex justify-between items-start mb-4">
+            <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600"><i class="fas fa-users"></i></div>
+            <span class="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded">+8%</span>
+        </div>
+        <p class="text-gray-500 text-sm">Active Users</p>
+        <h3 class="text-2xl font-bold text-gray-800">{{ users|length }}</h3>
+    </div>
+</div>
+
+           <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+    
+    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="font-bold text-gray-800">Recent Transactions</h3>
+            <button onclick="switchTab('reports')" class="text-sm text-blue-600 font-medium hover:text-blue-800 transition-colors bg-transparent border-none cursor-pointer">
+                View Reports <i class="fas fa-arrow-right ml-1 text-xs"></i>
+            </button>
+        </div>
+        <div class="flex flex-col">
+            {% for tx in transactions[:4] %}
+            <div class="flex justify-between items-center py-3 border-b border-gray-50 last:border-0 last:pb-0">
+                <div>
+                    <h4 class="font-medium text-sm text-gray-800">{{ tx.details }}</h4>
+                    <p class="text-xs text-gray-400 mt-1">{{ tx.timestamp }}</p>
+                </div>
+                <div class="text-right">
+                    {% if tx.action == 'SALE' %}
+                        <span class="block text-sm font-medium text-green-500">Sale</span>
+                        <span class="block text-[11px] text-gray-400 mt-0.5">Revenue</span>
+                    {% else %}
+                        <span class="block text-sm font-medium text-blue-500">Restock</span>
+                        <span class="block text-[11px] text-gray-400 mt-0.5">Inventory</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <p class="text-gray-400 text-sm text-center py-2">No recent transactions.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="font-bold text-gray-800">Recent Activities</h3>
+            <a href="/all_activities" class="text-sm text-blue-600 font-medium hover:text-blue-800 transition-colors">
+                View History <i class="fas fa-arrow-right ml-1 text-xs"></i>
+            </a>
+        </div>
+        <div class="flex flex-col">
+            {% for log in logs[:4] %}
+            <div class="flex justify-between items-center py-3 border-b border-gray-50 last:border-0 last:pb-0">
+                <div>
+                    <h4 class="font-medium text-sm text-gray-800">{{ log.details }}</h4>
+                    <p class="text-xs text-gray-400 mt-1">{{ log.timestamp }} • {{ log.user }}</p>
+                </div>
+                <div class="text-right whitespace-nowrap">
+                    {% if 'Added' in log.details %}
+                        <span class="bg-blue-50 text-blue-600 px-2.5 py-1 rounded text-xs font-semibold">Added</span>
+                    {% elif 'Deleted' in log.details or 'Removed' in log.details %}
+                        <span class="bg-red-50 text-red-600 px-2.5 py-1 rounded text-xs font-semibold">Deleted</span>
+                    {% elif 'Updated' in log.details %}
+                        <span class="bg-orange-50 text-orange-600 px-2.5 py-1 rounded text-xs font-semibold">Updated</span>
+                    {% else %}
+                        <span class="bg-gray-50 text-gray-600 px-2.5 py-1 rounded text-xs font-semibold">Logged</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div> <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm w-full">
+    <h3 class="font-bold text-gray-800 mb-6">Low Stock Alerts</h3>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for p in products if p.stock < p.min_stock %}
+        <div class="flex justify-between items-center p-4 bg-orange-50 rounded-xl border border-orange-100">
+            <div>
+                <h4 class="font-bold text-sm text-gray-800">{{ p.name }}</h4>
+                <p class="text-xs text-gray-500">{{ p.category }}</p>
+            </div>
+            <div class="text-right">
+                <span class="block font-bold text-orange-600 text-sm">{{ p.stock }} units</span>
+                <span class="text-[10px] text-gray-400">Min: {{ p.min_stock }}</span>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-span-full text-center py-6 text-green-600 bg-green-50 rounded-xl">
+            <i class="fas fa-check-circle mb-2"></i>
+            <p class="text-sm font-bold">All stock levels healthy</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+        </div>
+
+        <div id="view-users" class="view-section" style="display: none;">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-800">User Management</h2>
+            <p class="text-gray-500">Manage system users and access permissions.</p>
+        </div>
+        <button onclick="openAddUser()" class="px-5 py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-200">
+            <i class="fas fa-plus mr-2"></i>Add User
+        </button>
+    </div>
+
+    <div class="flex flex-col md:flex-row gap-4 mb-6">
+        <div class="relative flex-1">
+            <i class="fas fa-search absolute left-4 top-3.5 text-gray-400"></i>
+            <input type="text" id="userSearch" onkeyup="filterUserCards()" placeholder="Search users by name, email, or role..." class="w-full pl-12 pr-4 py-3 border border-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition">
+        </div>
+        <div class="relative w-full md:w-64">
+    <select id="userCategoryFilter" onchange="filterUserCards()" class="w-full pl-4 pr-10 py-3 border border-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 shadow-sm appearance-none bg-white">
+        <option value="">All Roles & Categories</option>
+        
+        <optgroup label="Roles">
+            <option value="admin">Admins</option>
+            <option value="staff">Staff</option>
+            <option value="supplier">Suppliers</option>
+        </optgroup>
+        
+        <optgroup label="Categories">
+            {% for cat in dynamic_categories %}
+                <option value="{{ cat | lower }}">{{ cat | title }}</option>
+            {% endfor %}
+        </optgroup>
+    </select>
+    <i class="fas fa-chevron-down absolute right-4 top-4 text-gray-400 pointer-events-none"></i>
+</div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="userCardContainer">
+        {% for u in users %}
+        <div class="user-card bg-white p-6 rounded-3xl border border-gray-50 shadow-sm hover:shadow-md transition group">
+            <div class="flex items-center gap-4 mb-5">
+                <div class="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xl">
+                    {{ u.name[0] | upper }}
+                </div>
+                <div class="flex-1">
+                    <h4 class="font-bold text-gray-800 text-lg leading-tight">{{ u.name }}</h4>
+                    <p class="text-sm text-gray-500">{{ u.email }}</p>
+                    <p class="text-xs text-gray-400 mt-1 hidden">{{ u.assigned_category }}</p> </div>
+            </div>
+
+            <div class="space-y-3 mb-6">
+    <div class="flex justify-between text-sm items-center">
+        <span class="text-gray-400">Password</span>
+        <div class="flex items-center gap-2">
+            <span class="font-mono text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-xs" data-password="{{ u.password }}">••••••••</span>
+            <i class="fas fa-eye text-gray-400 hover:text-blue-600 cursor-pointer transition text-xs" onclick="toggleCardPassword(this)"></i>
+        </div>
+    </div>
+
+                <div class="flex justify-between text-sm items-center">
+        <span class="text-gray-400">Access</span>
+        <span class="font-medium text-gray-800 text-sm">
+            {% if u.role == 'Admin' %}
+                Global
+            {% else %}
+                {{ u.assigned_category or 'Unassigned' }}
+            {% endif %}
+        </span>
+    </div>
+                <div class="flex justify-between text-sm items-center">
+                    <span class="text-gray-400">Role & Status</span>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-1 rounded-lg font-bold text-[10px] uppercase tracking-wider {{ 'bg-blue-50 text-blue-600' if u.role == 'Admin' else 'bg-purple-50 text-purple-600' }}">
+                            {{ u.role }}
+                        </span>
+                        
+                        <select onchange="updateUserStatus('{{ u.id }}', this.value, this)" 
+                            class="text-[10px] font-bold px-2 py-1 rounded-lg outline-none cursor-pointer border-none transition-colors duration-200
+                            {% if u.status == 'Active' or not u.status %} bg-green-50 text-green-600
+                            {% elif u.status == 'Inactive' %} bg-gray-100 text-gray-600 {% endif %}">
+                            <option value="Active" {{ 'selected' if u.status == 'Active' or not u.status }}>Active</option>
+                            <option value="Inactive" {{ 'selected' if u.status == 'Inactive' }}>Inactive</option>
+                        </select>
+                    </div> 
+                </div>
+            </div>
+
+            <div class="flex gap-3 pt-5 border-t border-gray-50">
+                <button onclick="openEditUser('{{u.id}}', '{{u.name}}', '{{u.email}}', '{{u.role}}', '{{u.assigned_category}}')" class="flex-1 py-2 bg-gray-50 text-gray-600 rounded-xl hover:bg-gray-100 transition text-sm font-bold">
+                    <i class="fas fa-pen mr-2"></i> Edit
+                </button>
+                {% if u.role != 'Admin' %}
+                <a href="/delete_user/{{ u.id }}" class="px-4 py-2 bg-red-50 text-red-500 rounded-xl hover:bg-red-100 transition flex items-center">
+                    <i class="fas fa-trash-alt"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+        <div id="view-products" class="view-section hidden space-y-6">
+            <div class="flex justify-between items-center">
+                <div><h2 class="text-2xl font-bold text-gray-800">Product Management</h2><p class="text-gray-500">Manage products.</p></div>
+                <button onclick="openAddProduct()" class="px-5 py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-200"><i class="fas fa-plus mr-2"></i>Add Product</button>
+            </div>
+            <div class="flex flex-col md:flex-row gap-4 mb-4">
+    <div class="relative flex-1">
+        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+        <input type="text" id="prodSearch" onkeyup="liveSearch('prodSearch', 'prodTable')" 
+               placeholder="Search products by name, SKU, or category..." 
+               class="w-full pl-10 pr-4 py-2 border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
+    </div>
+    
+    <div class="relative w-full md:w-64">
+        <select id="prodCategoryFilter" onchange="filterProductDropdown()" class="w-full pl-4 pr-10 py-2 border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 shadow-sm appearance-none bg-white">
+            <option value="">All Categories</option>
+            {% for cat in dynamic_categories %}
+                <option value="{{ cat | lower }}">{{ cat | title }}</option>
+            {% endfor %}
+        </select>
+        <i class="fas fa-chevron-down absolute right-4 top-3 text-gray-400 pointer-events-none"></i>
+    </div>
+</div>
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <table id="prodTable" class="w-full text-left">
+                    <thead class="bg-gray-50 text-gray-500 font-medium text-xs uppercase">
+                        <tr><th class="px-6 py-4">Product</th><th class="px-6 py-4">SKU</th><th class="px-6 py-4">Category</th><th class="px-6 py-4">Price</th><th class="px-6 py-4">Stock</th><th class="px-6 py-4">Supplier</th><th class="px-6 py-4 text-right">Actions</th></tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-sm">
+                        {% for p in products %}
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-6 py-4 flex items-center gap-3"><div class="w-8 h-8 rounded bg-gray-100 flex items-center justify-center text-gray-400"><i class="fas fa-box"></i></div><span class="font-bold text-gray-800">{{ p.name }}</span></td>
+                            <td class="px-6 py-4 text-gray-500 font-mono text-xs">{{ p.sku }}</td>
+                            <td class="px-6 py-4"><span class="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">{{ p.category }}</span></td>
+                            <td class="px-6 py-4 font-bold">₹{{ p.price }}</td>
+                            <td class="px-6 py-4"><span class="px-2 py-1 {{ 'bg-red-100 text-red-700' if p.stock < p.min_stock else 'bg-green-100 text-green-700' }} rounded text-xs font-bold">{{ p.stock }} units</span></td>
+                            <td class="px-6 py-4 text-gray-500 text-xs">{{ p.supplier }}</td>
+                            <td class="px-6 py-4 text-right space-x-2">
+                                <button onclick="openEditProduct('{{p.id}}', '{{p.name}}', '{{p.sku}}', '{{p.category}}', '{{p.price}}', '{{p.stock}}')" class="text-blue-500 hover:text-blue-700"><i class="fas fa-pen"></i></button>
+                                <a href="/delete_product/{{ p.id }}" class="text-red-400 hover:text-red-600"><i class="fas fa-trash"></i></a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="view-stock" class="view-section hidden space-y-8">
+            <h2 class="text-2xl font-bold text-gray-800">Stock Control</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div onclick="filterByStatus('')" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between h-32 cursor-pointer hover:shadow-md hover:bg-gray-50 transition">
+        <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white mb-2"><i class="fas fa-cube"></i></div>
+        <div><p class="text-gray-500 text-sm font-medium">Total Items</p><h3 class="text-2xl font-bold text-gray-800">{{ products|length }}</h3></div>
+    </div>
+
+    <div onclick="filterByStatus('Low Stock')" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between h-32 cursor-pointer hover:shadow-md hover:bg-orange-50 transition">
+        <div class="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center text-white mb-2"><i class="fas fa-exclamation-triangle"></i></div>
+        <div><p class="text-gray-500 text-sm font-medium">Low Stock</p><h3 class="text-2xl font-bold text-gray-800">{{ stats.low }}</h3></div>
+    </div>
+
+    <div onclick="filterByStatus('Out of Stock')" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between h-32 cursor-pointer hover:shadow-md hover:bg-red-50 transition">
+        <div class="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center text-white mb-2"><i class="fas fa-chart-area"></i></div>
+        <div><p class="text-gray-500 text-sm font-medium">Out of Stock</p>
+            <h3 class="text-2xl font-bold text-gray-800">
+                {% set out = namespace(count=0) %}{% for p in products if p.stock == 0 %}{% set out.count = out.count + 1 %}{% endfor %}{{ out.count }}
+            </h3>
+        </div>
+    </div>
+</div>
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <table id="stockTable" class="min-w-full text-left">
+                    <thead class="bg-gray-50 text-gray-500 font-medium text-xs uppercase">
+                        <tr><th class="px-6 py-4">Product</th><th class="px-6 py-4">SKU</th><th class="px-6 py-4">Current Stock</th><th class="px-6 py-4">Min</th><th class="px-6 py-4">Status</th><th class="px-6 py-4">Last Updated</th><th class="px-6 py-4 text-right">Actions</th></tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-sm">
+                        {% for p in products %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 font-bold text-gray-800">{{ p.name }}</td>
+                            <td class="px-6 py-4 text-gray-500 font-mono text-xs">{{ p.sku }}</td>
+                            <td class="px-6 py-4 font-bold">{{ p.stock }} units</td>
+                            <td class="px-6 py-4 text-gray-500">{{ p.min_stock }}</td>
+                            <td class="px-6 py-4">
+                                {% if p.stock == 0 %}<span class="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-bold border border-red-200">Out of Stock</span>
+                                {% elif p.stock < p.min_stock %}<span class="px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs font-bold border border-orange-200">Low Stock</span>
+                                {% else %}<span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-bold border border-green-200">Normal</span>{% endif %}
+                            </td>
+                            <td class="px-6 py-4 text-gray-500 text-xs">2024-11-23</td>
+                            <td class="px-6 py-4 text-right"><button onclick="openAdjustStock('{{p.sku}}', {{p.stock}})" class="text-blue-600 font-bold text-xs"><i class="fas fa-sync-alt mr-1"></i> Adjust</button></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="view-reports" class="view-section hidden space-y-6">
+            <h2 class="text-2xl font-bold text-gray-800">Report Generation</h2>
+            
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div id="tab-sales" onclick="showReport('sales')" class="bg-blue-50 border border-blue-200 p-4 rounded-xl flex items-center gap-4 cursor-pointer transition-all">
+                    <div class="w-10 h-10 bg-blue-600 rounded text-white flex items-center justify-center"><i class="fas fa-dollar-sign"></i></div>
+                    <div><h3 class="font-bold text-blue-900">Sales Report</h3><p class="text-xs text-blue-600">Revenue analysis</p></div>
+                </div>
+                <div id="tab-stock" onclick="showReport('stock')" class="bg-white border border-gray-200 p-4 rounded-xl flex items-center gap-4 cursor-pointer hover:border-blue-300 transition-all">
+                    <div class="w-10 h-10 bg-gray-100 rounded text-gray-500 flex items-center justify-center"><i class="fas fa-box"></i></div>
+                    <div><h3 class="font-bold text-gray-800">Stock Report</h3><p class="text-xs text-gray-500">Inventory levels</p></div>
+                </div>
+                <div id="tab-performance" onclick="showReport('performance')" class="bg-white border border-gray-200 p-4 rounded-xl flex items-center gap-4 cursor-pointer hover:border-blue-300 transition-all">
+                    <div class="w-10 h-10 bg-blue-50 rounded text-blue-500 flex items-center justify-center"><i class="fas fa-chart-line"></i></div>
+                    <div><h3 class="font-bold text-gray-800">Performance</h3><p class="text-xs text-gray-500">System metrics</p></div>
+                </div>
+            </div>
+
+            <div id="report-sales" class="report-content">
+                <div class="flex flex-col md:flex-row md:items-center justify-between mb-4 bg-white p-4 rounded-xl border border-gray-100 shadow-sm gap-4">
+    <div class="flex items-center gap-2">
+        <i class="fas fa-calendar text-gray-400"></i>
+        <span class="text-sm font-bold text-gray-600">Custom Date Range:</span>
+    </div>
+    
+    <form action="/admin" method="GET" class="flex flex-wrap items-center gap-2">
+        <select name="day" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-gray-700 cursor-pointer">
+            <option value="">Day</option>
+            {% for d in range(1, 32) %}
+                <option value="{{ '%02d'|format(d) }}" {% if request.args.get('day') == '%02d'|format(d) %}selected{% endif %}>{{ d }}</option>
+            {% endfor %}
+        </select>
+        
+        <select name="month" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-gray-700 cursor-pointer">
+            <option value="">Month</option>
+            <option value="01" {% if request.args.get('month') == '01' %}selected{% endif %}>Jan</option>
+            <option value="02" {% if request.args.get('month') == '02' %}selected{% endif %}>Feb</option>
+            <option value="03" {% if request.args.get('month') == '03' %}selected{% endif %}>Mar</option>
+            <option value="04" {% if request.args.get('month') == '04' %}selected{% endif %}>Apr</option>
+            <option value="05" {% if request.args.get('month') == '05' %}selected{% endif %}>May</option>
+            <option value="06" {% if request.args.get('month') == '06' %}selected{% endif %}>Jun</option>
+            <option value="07" {% if request.args.get('month') == '07' %}selected{% endif %}>Jul</option>
+            <option value="08" {% if request.args.get('month') == '08' %}selected{% endif %}>Aug</option>
+            <option value="09" {% if request.args.get('month') == '09' %}selected{% endif %}>Sep</option>
+            <option value="10" {% if request.args.get('month') == '10' %}selected{% endif %}>Oct</option>
+            <option value="11" {% if request.args.get('month') == '11' %}selected{% endif %}>Nov</option>
+            <option value="12" {% if request.args.get('month') == '12' %}selected{% endif %}>Dec</option>
+        </select>
+        
+        <select name="year" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-gray-700 cursor-pointer" required>
+            <option value="">Year</option>
+            <option value="2023" {% if request.args.get('year') == '2023' %}selected{% endif %}>2023</option>
+            <option value="2024" {% if request.args.get('year') == '2024' %}selected{% endif %}>2024</option>
+            <option value="2025" {% if request.args.get('year') == '2025' %}selected{% endif %}>2025</option>
+            <option value="2026" {% if request.args.get('year') == '2026' %}selected{% endif %}>2026</option>
+        </select>
+        
+        <button type="submit" class="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 shadow-sm transition">Filter</button>
+        <a href="/admin" class="px-4 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-200 transition">Clear</a>
+    </form>
+</div>
+                
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-bold text-gray-800">Sales & Revenue Trends</h3>
+                        <form action="/export_report/sales" method="GET" class="flex items-center gap-2">
+    <select name="day" class="px-2 py-1.5 border border-gray-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-gray-700 cursor-pointer">
+        <option value="">Day (All)</option>
+        {% for d in range(1, 32) %}
+            <option value="{{ '%02d'|format(d) }}">{{ d }}</option>
+        {% endfor %}
+    </select>
+    
+    <select name="month" class="px-2 py-1.5 border border-gray-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-gray-700 cursor-pointer">
+        <option value="">Month (All)</option>
+        <option value="01">Jan</option><option value="02">Feb</option><option value="03">Mar</option>
+        <option value="04">Apr</option><option value="05">May</option><option value="06">Jun</option>
+        <option value="07">Jul</option><option value="08">Aug</option><option value="09">Sep</option>
+        <option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option>
+    </select>
+    
+    <select name="year" class="px-2 py-1.5 border border-gray-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-gray-700 cursor-pointer" required>
+        <option value="">Year</option>
+        <option value="2023">2023</option><option value="2024">2024</option>
+        <option value="2025">2025</option><option value="2026">2026</option>
+    </select>
+    
+    <button type="submit" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 shadow-sm transition flex items-center">
+        <i class="fas fa-download mr-1"></i>Export
+    </button>
+</form>
+                    </div>
+                    <div style="position: relative; height: 320px; width: 100%;">
+        <canvas id="salesChart"></canvas>
+    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+        <p class="text-gray-500 text-sm mb-1">Total Sales</p>
+        <h3 class="text-2xl font-bold text-gray-800" id="metric-sales">37,100</h3>
+        <p class="text-xs font-bold mt-2" id="change-sales">+12.5% from last period</p>
+    </div>
+    
+    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+        <p class="text-gray-500 text-sm mb-1">Total Revenue</p>
+        <h3 class="text-2xl font-bold text-gray-800" id="metric-revenue">₹{{ "{:,.0f}".format(stats.value) }}</h3>
+        <p class="text-xs font-bold mt-2" id="change-revenue">+0% from last period</p>
+    </div>
+    
+    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+        <p class="text-gray-500 text-sm mb-1">Average Order Value</p>
+        <h3 class="text-2xl font-bold text-gray-800" id="metric-avg">₹3,000</h3>
+        <p class="text-xs font-bold mt-2" id="change-avg">+4.8% from last period</p>
+    </div>
+</div>
+            </div>
+
+            <div id="report-stock" class="report-content hidden">
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
+        
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="font-bold text-gray-800 text-lg">Stock Levels by Category</h3>
+            
+            <div class="flex items-center gap-6">
+                
+                <div class="flex gap-4 text-xs font-semibold text-gray-600">
+                    <span class="flex items-center"><span class="w-3 h-3 bg-green-500 rounded-sm mr-1.5"></span>In Stock</span>
+                    <span class="flex items-center"><span class="w-3 h-3 bg-orange-400 rounded-sm mr-1.5"></span>Low Stock</span>
+                    <span class="flex items-center"><span class="w-3 h-3 bg-red-500 rounded-sm mr-1.5"></span>Out Of Stock</span>
+                </div>
+                
+                <a href="/export_report/stock" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors shadow-sm flex items-center">
+                    <i class="fas fa-download mr-2"></i> Export Report
+                </a>
+                
+            </div>
+        </div>
+        
+        <div class="h-64 w-full">
+            <canvas id="stockChart"></canvas>
+        </div>
+        
+    </div>
+</div>
+                
+                <h3 class="text-lg font-bold text-gray-800 mb-4">System Performance Metrics</h3>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+        <p class="text-blue-600 text-xs font-bold uppercase">Order Fulfillment</p>
+        <h3 class="text-xl font-bold text-blue-900" id="perf-fulfillment">100%</h3>
+    </div>
+    
+    <div class="bg-purple-50 p-4 rounded-xl border border-purple-100">
+        <p class="text-purple-600 text-xs font-bold uppercase">Response Time</p>
+        <h3 class="text-xl font-bold text-purple-900" id="perf-time">1.2 hrs</h3>
+    </div>
+
+    <div class="bg-orange-50 p-4 rounded-xl border border-orange-100">
+        <p class="text-orange-600 text-xs font-bold uppercase">Total Turnover</p>
+        <h3 class="text-xl font-bold text-orange-900" id="perf-turnover">Loading...</h3>
+    </div>
+</div>
+                
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                    <h3 class="font-bold text-gray-800 mb-4">Recent Activities</h3>
+                    <div class="space-y-4">
+                        {% for log in logs[:5] %}
+                        <div class="flex justify-between items-center pb-3 border-b border-gray-50 last:border-0">
+                            <div><p class="font-bold text-sm text-gray-800">{{ log.details }}</p><p class="text-xs text-gray-400">by {{ log.user }}</p></div><span class="text-xs text-gray-400">{{ log.timestamp }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="flex justify-between items-center mb-6">
+    <a href="/all_activities" class="text-sm text-blue-600 font-semibold hover:text-blue-800">
+        View All History <i class="fas fa-external-link-alt ml-1"></i>
+    </a>
+</div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <div id="addUserModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white rounded-2xl p-6 w-96 shadow-2xl">
+            <h3 class="text-lg font-bold mb-4 text-gray-800" id="userModalTitle">Create New User</h3>
+            <form action="/add_user" method="POST" class="space-y-3" id="userForm">
+                <input type="hidden" name="user_id" id="userIdField">
+                <input type="text" name="name" id="userName" placeholder="Full Name" class="w-full border border-gray-200 p-2.5 rounded-lg text-sm" required>
+                <input type="email" name="email" id="userEmail" placeholder="Email" class="w-full border border-gray-200 p-2.5 rounded-lg text-sm" required>
+                <input type="text" name="password" id="userPass" placeholder="Password" class="w-full border border-gray-200 p-2.5 rounded-lg text-sm" required>
+                <select name="role" id="userRole" class="w-full border border-gray-200 p-2.5 rounded-lg text-sm" onchange="toggleCategory(this.value)">
+                    <option value="Staff">Staff</option><option value="Supplier">Supplier</option><option value="Admin">Admin</option>
+                </select>
+                <div id="categoryField">
+    <input type="text" name="assigned_category" id="userCategory" list="dynamicCategoryList" placeholder="Select or type a category..." class="w-full border border-gray-200 p-2.5 rounded-lg text-sm">
+    <datalist id="dynamicCategoryList">
+        <option value="Electronics"></option>
+        <option value="Accessories"></option>
+        <option value="Office Supplies"></option>
+        <option value="Furniture"></option>
+        {% for cat in dynamic_categories %}
+            <option value="{{ cat | title }}"></option>
+        {% endfor %}
+    </datalist>
+</div>
+                <div id="supplierFields" style="display:none;"><input type="text" name="contact" placeholder="Phone" class="w-full border border-gray-200 p-2.5 rounded-lg text-sm mb-2"><textarea name="address" placeholder="Address" class="w-full border border-gray-200 p-2.5 rounded-lg text-sm"></textarea></div>
+                <div class="flex gap-2 mt-4"><button type="button" onclick="document.getElementById('addUserModal').classList.add('hidden')" class="flex-1 py-2 bg-gray-100 rounded-lg text-sm font-bold text-gray-600">Cancel</button><button type="submit" class="flex-1 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold">Save</button></div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="addProductModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm">
+    <div class="bg-white rounded-2xl p-6 w-96 shadow-2xl">
+        <h3 class="text-lg font-bold mb-4 text-gray-800" id="prodModalTitle">Add Product</h3>
+        <form action="/add_product" method="POST" class="space-y-3" id="prodForm">
+            <input type="hidden" name="product_id" id="prodIdField">
+            <input type="text" name="name" id="prodName" placeholder="Name" class="w-full border border-gray-200 p-2.5 rounded-lg text-sm" required>
+            <input type="text" name="sku" id="prodSku" placeholder="SKU" class="w-full border border-gray-200 p-2.5 rounded-lg text-sm" required>
+            
+            <div>
+                <input type="text" name="category" id="prodCat" list="productCategoryList" placeholder="Select or type a category..." class="w-full border border-gray-200 p-2.5 rounded-lg text-sm" required>
+                <datalist id="productCategoryList">
+                    <option value="Electronics"></option>
+                    <option value="Accessories"></option>
+                    <option value="Office Supplies"></option>
+                    <option value="Furniture"></option>
+                    
+                    {% for cat in dynamic_categories %}
+                        <option value="{{ cat | title }}"></option>
+                    {% endfor %}
+                </datalist>
+            </div>
+            <input type="text" name="supplier" placeholder="Supplier Name (e.g. Tech Vendor)" class="w-full border border-gray-200 p-2.5 rounded-lg text-sm mt-2" required>
+            <div class="flex gap-2">
+                <input type="number" name="price" id="prodPrice" placeholder="Price" class="w-full border border-gray-200 p-2.5 rounded-lg text-sm" required>
+                <input type="number" name="stock" id="prodStock" placeholder="Stock" class="w-full border border-gray-200 p-2.5 rounded-lg text-sm" required>
+            </div>
+            <div class="flex gap-2 mt-4">
+                <button type="button" onclick="document.getElementById('addProductModal').classList.add('hidden')" class="flex-1 py-2 bg-gray-100 rounded-lg text-sm font-bold text-gray-600">Cancel</button>
+                <button type="submit" class="flex-1 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+    <div id="adjustStockModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white rounded-2xl p-6 w-96 shadow-2xl">
+            <h3 class="text-lg font-bold mb-4 text-gray-800">Adjust Stock</h3>
+            <form action="/adjust_stock_admin" method="POST" class="space-y-3">
+                <input type="hidden" name="sku" id="adjustSku">
+                <div class="p-3 bg-gray-50 rounded mb-2">
+                    <p class="text-xs text-gray-500">Updating SKU:</p>
+                    <p class="font-bold text-gray-800" id="displaySku">...</p>
+                </div>
+                <label class="text-xs font-bold text-gray-500">New Quantity</label>
+                <input type="number" name="new_stock" id="adjustQty" class="w-full border border-gray-200 p-2.5 rounded-lg text-sm" required>
+                <div class="flex gap-2 mt-4">
+                    <button type="button" onclick="document.getElementById('adjustStockModal').classList.add('hidden')" class="flex-1 py-2 bg-gray-100 rounded-lg text-sm font-bold text-gray-600">Cancel</button>
+                    <button type="submit" class="flex-1 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// 1. GLOBAL VARIABLES
+let salesChart; 
+let stockChart;
+let myStockChart = null;
+
+// 2. SWITCH TABS
+function switchTab(tabId) {
+    localStorage.setItem('adminActiveTab', tabId);
+    document.querySelectorAll('.view-section').forEach(el => el.style.display = 'none');
+    
+    const target = document.getElementById('view-' + tabId);
+    if(target) target.style.display = 'block';
+
+    document.querySelectorAll('nav button').forEach(btn => { 
+        btn.classList.remove('bg-blue-50', 'text-blue-600'); 
+        btn.classList.add('text-gray-600'); 
+    });
+    
+    const activeBtn = document.getElementById('nav-' + tabId); 
+    if(activeBtn) {
+        activeBtn.classList.remove('text-gray-600'); 
+        activeBtn.classList.add('bg-blue-50', 'text-blue-600');
+    }
+    if (tabId === 'reports' || tabId === 'stock') {
+        loadCategoryStockChart(); 
+    }
+}
+
+// 3. SHOW REPORTS
+function showReport(type) {
+    document.querySelectorAll('.report-content').forEach(el => el.classList.add('hidden'));
+    const target = document.getElementById('report-' + type);
+    if(target) target.classList.remove('hidden');
+
+    ['sales', 'stock', 'performance'].forEach(t => { 
+        const tab = document.getElementById('tab-' + t); 
+        if(tab) {
+            tab.className = "bg-white border border-gray-200 p-4 rounded-xl flex items-center gap-4 cursor-pointer hover:border-blue-300 transition-all"; 
+            tab.querySelector('h3').classList.remove('text-blue-900'); 
+            tab.querySelector('h3').classList.add('text-gray-800'); 
+        }
+    });
+
+    const activeTab = document.getElementById('tab-' + type); 
+    if(activeTab) {
+        activeTab.className = "bg-blue-50 border border-blue-200 p-4 rounded-xl flex items-center gap-4 cursor-pointer transition-all"; 
+        activeTab.querySelector('h3').classList.remove('text-gray-800'); 
+        activeTab.querySelector('h3').classList.add('text-blue-900');
+    }
+}
+
+// 4. DYNAMIC UPDATE (Sales)
+async function updateSales(range) {
+    const btns = document.querySelectorAll('.btn-range');
+    btns.forEach(b => { b.className = "btn-range px-4 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-200"; });
+    
+    // Safety check in case 'event' isn't passed (like on initial page load)
+    if(typeof event !== 'undefined' && event && event.target) {
+        event.target.className = "btn-range px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-bold shadow-sm shadow-blue-200";
+    }
+
+    try {
+        // 1. Look at the URL and grab the custom dropdown values
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // 2. Attach those values to the fetch URL
+        const fetchUrl = `/get_sales_data/${range}?${urlParams.toString()}`;
+        
+        // Fetch using the new URL!
+        const response = await fetch(fetchUrl);
+        const data = await response.json();
+
+        salesChart.data.labels = data.labels;
+        salesChart.data.datasets[0].data = data.revenue;
+        salesChart.data.datasets[1].data = data.sales;
+        salesChart.update();
+
+        // Update the main big numbers
+        if(document.getElementById('metric-sales')) document.getElementById('metric-sales').innerText = data.total_sales || "0";
+        if(document.getElementById('metric-revenue')) document.getElementById('metric-revenue').innerText = "₹" + (data.total_revenue || "0");
+        if(document.getElementById('metric-avg')) document.getElementById('metric-avg').innerText = "₹" + (data.avg_value ? data.avg_value.toLocaleString() : "0");
+        
+        // 3. Helper function to update percentage texts and colors
+        const updatePercentText = (elementId, value) => {
+    const el = document.getElementById(elementId);
+    if (el && value !== undefined) {
+        // Force the value to a number
+        const numericValue = parseFloat(value);
+        
+        // Display logic
+        const prefix = numericValue > 0 ? '+' : '';
+        el.innerText = `${prefix}${numericValue}% from last period`;
+        
+        // Color Logic Reset
+        el.classList.remove('text-green-600', 'text-red-600', 'text-gray-500', 'text-gray-400');
+        
+        // Color Assignment
+        if (numericValue > 0) {
+            el.classList.add('text-green-600'); // Green for growth
+        } else if (numericValue < 0 || (numericValue === 0 && document.getElementById('metric-revenue').innerText.includes('₹0'))) {
+            // Red if negative OR if the current total is 0 while looking at a past period that had data
+            el.classList.add('text-red-600'); 
+        } else {
+            el.classList.add('text-gray-500'); // Grey only if both periods are 0
+        }
+        
+        el.classList.add('text-xs', 'font-bold', 'mt-2');
+    }
+};
+        
+        // Run the helper function for each specific card
+        updatePercentText('change-revenue', data.revenue_change);
+        updatePercentText('change-sales', data.sales_change);
+        updatePercentText('change-avg', data.avg_change);
+
+    } catch (e) {
+        console.error("Fetch error:", e);
+    }
+}
+
+// 5. PERFORMANCE UPDATE
+function updatePerformance(range) {
+    const btns = document.querySelectorAll('.btn-range-perf');
+    btns.forEach(b => { b.className = "btn-range-perf px-4 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-sm"; });
+    if(event && event.target) event.target.className = "btn-range-perf px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-bold";
+    
+    fetch('/api/performance_data?range=' + range)
+        .then(response => response.json())
+        .then(data => {
+            if(document.getElementById('perf-fulfillment')) document.getElementById('perf-fulfillment').innerText = data.fulfillment ;
+            if(document.getElementById('perf-time')) document.getElementById('perf-time').innerText = data.response_time;
+            if(document.getElementById('perf-turnover')) document.getElementById('perf-turnover').innerText = data.turnover ;
+        });
+}
+
+// 2. The function to fetch and draw the grouped chart
+async function loadCategoryStockChart() {
+    const ctx = document.getElementById('stockChart');
+    if (!ctx) return;
+
+    try {
+        const response = await fetch('/api/stock_by_category');
+        const data = await response.json();
+
+        if (data.error) {
+            console.error("Backend Error:", data.error);
+            return;
+        }
+
+        // Clean up the old chart before drawing the new one
+        if (myStockChart) {
+            myStockChart.destroy();
+        }
+
+        myStockChart = new Chart(ctx.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: data.labels, // Categories: Electronics, Furniture, etc.
+                datasets: [
+                    {
+                        label: 'inStock',
+                        data: data.inStock,
+                        backgroundColor: '#10b981', // Green
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'lowStock',
+                        data: data.lowStock,
+                        backgroundColor: '#f59e0b', // Yellow/Orange
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'outOfStock',
+                        data: data.outOfStock,
+                        backgroundColor: '#ef4444', // Red
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { 
+                        display: false,
+                        position: 'bottom',
+                        labels: { usePointStyle: true, boxWidth: 8 }
+                    }
+                },
+                scales: {
+                    y: { 
+                        beginAtZero: true, 
+                        ticks: { stepSize: 1, color: '#9ca3af' },
+                        grid: { color: '#f3f4f6' }
+                    },
+                    x: { 
+                        grid: { display: false },
+                        ticks: { color: '#4b5563', font: { weight: '500' } }
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error("Failed to load category chart:", error);
+    }
+}
+document.addEventListener("DOMContentLoaded", function() {
+    // 1. Handle Tabs
+    const savedTab = localStorage.getItem('adminActiveTab') || 'overview';
+    if (typeof switchTab === 'function') {
+        switchTab(savedTab);
+    }
+    
+    // 2. Setup the Sales Chart
+    const ctxS = document.getElementById('salesChart');
+    if (ctxS) {
+        salesChart = new Chart(ctxS.getContext('2d'), {
+            type: 'line',
+            data: { labels: [], datasets: [
+                { label: 'Revenue (₹)', data: [], borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.4 },
+                { label: 'Sales Vol', data: [], borderColor: '#3b82f6', fill: true, tension: 0.4 }
+            ]},
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+
+    // 3. Fetch the data for EVERYTHING
+    if (typeof updateSales === 'function') updateSales('week');
+    if (typeof updatePerformance === 'function') updatePerformance('week');
+    if (typeof loadCategoryStockChart === 'function') loadCategoryStockChart();
+});
+
+function jumpToAndFilter(tabName, filterValue = '') {
+    switchTab(tabName); 
+
+    setTimeout(() => {
+        const section = document.getElementById('view-' + tabName);
+        if (!section) return;
+
+        const term = filterValue.toLowerCase();
+
+        // If we are looking at Users (Card View)
+        if (tabName === 'users') {
+            const searchInput = document.getElementById('userSearch');
+            if (searchInput) searchInput.value = filterValue;
+            
+            const cards = section.querySelectorAll('.user-card');
+            cards.forEach(card => {
+                card.style.display = term === "" || card.innerText.toLowerCase().includes(term) ? "" : "none";
+            });
+        } 
+        // If we are looking at Products or Stock (Table View)
+        else {
+            const table = section.querySelector('table');
+            if (!table) return;
+
+            const rows = table.querySelectorAll('tr');
+            rows.forEach((row, index) => {
+                if (index === 0) return;
+                row.style.display = term === "" || row.innerText.toLowerCase().includes(term) ? "" : "none";
+                row.style.backgroundColor = term !== "" && row.style.display !== "none" ? "#fff7ed" : ""; 
+            });
+        }
+    }, 250);
+}
+
+// User Card Filters (For the search box and dropdown)
+function filterUserCards() {
+    const searchEl = document.getElementById('userSearch');
+    const filterEl = document.getElementById('userCategoryFilter'); 
+    
+    if (!searchEl) return;
+
+    const search = searchEl.value.toLowerCase();
+    const filter = filterEl ? filterEl.value.toLowerCase() : "";
+    
+    document.querySelectorAll('.user-card').forEach(card => {
+        // FIXED: textContent is infinitely faster than innerText and catches your hidden categories
+        const text = card.textContent.toLowerCase();
+        
+        // Show card only if it matches both the search text AND the dropdown filter
+        if (text.includes(search) && (filter === "" || text.includes(filter))) {
+            card.style.display = "";
+        } else {
+            card.style.display = "none";
+        }
+    });
+}
+
+// User Status Updates
+function updateUserStatus(userId, newStatus, selectElement) {
+    const colors = {
+        'Active': 'bg-green-50 text-green-600',
+        'Inactive': 'bg-gray-100 text-gray-600',
+    };
+    selectElement.className = `text-[10px] font-bold px-2 py-1 rounded-lg outline-none cursor-pointer border-none transition-colors duration-200 ${colors[newStatus] || 'bg-gray-100 text-gray-600'}`;
+
+    fetch(`/update_status/${userId}/${newStatus}`)
+        .then(response => response.json())
+        .then(data => console.log(`Status updated to ${newStatus}`))
+        .catch(error => console.error("Error updating status:", error));
+}
+
+// General Table Live Search
+function liveSearch(inputId, tableId) {
+    const input = document.getElementById(inputId);
+    const table = document.getElementById(tableId);
+    if (!input || !table) return;
+
+    const filter = input.value.toLowerCase();
+    const rows = table.getElementsByTagName("tr");
+
+    for (let i = 1; i < rows.length; i++) {
+        rows[i].style.display = rows[i].innerText.toLowerCase().includes(filter) ? "" : "none";
+    }
+}
+
+function filterByStatus(statusType) {
+    // 1. Find the Stock section and its table
+    const stockSection = document.getElementById('view-stock');
+    if (!stockSection) return;
+    
+    const table = stockSection.querySelector('table');
+    if (!table) {
+        console.warn("Stock table not found.");
+        return;
+    }
+
+    // 2. Loop through the rows and filter based on the clicked card
+    const rows = table.querySelectorAll('tr');
+    const term = statusType.toLowerCase();
+
+    rows.forEach((row, index) => {
+        if (index === 0) return; // Skip the header row
+        
+        // Show row if the term is empty (Total Items) OR if the row text includes the term
+        if (term === "" || row.innerText.toLowerCase().includes(term)) {
+            row.style.display = "";
+            // Add a slight highlight to filtered items so they stand out
+            row.style.backgroundColor = term !== "" ? "#fff7ed" : ""; 
+        } else {
+            row.style.display = "none";
+        }
+    });
+}
+
+function filterProductDropdown() {
+    const filter = document.getElementById('prodCategoryFilter').value.toLowerCase();
+    const rows = document.querySelectorAll('#prodTable tbody tr');
+    
+    rows.forEach(row => {
+        // The category is in the 3rd column of your table (index 2)
+        const categoryCell = row.cells[2].textContent.toLowerCase();
+        
+        if (filter === "" || categoryCell.includes(filter)) {
+            row.style.display = "";
+        } else {
+            row.style.display = "none";
+        }
+    });
+}
+
+function toggleCardPassword(icon) {
+    const pwdSpan = icon.previousElementSibling;
+    if (pwdSpan.textContent === '••••••••') {
+        pwdSpan.textContent = pwdSpan.getAttribute('data-password');
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+        pwdSpan.textContent = '••••••••';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+}
+
+// 7. MODALS
+function openAddUser() {
+    document.getElementById('userForm').action = '/add_user';
+    document.getElementById('userModalTitle').innerText = 'Create New User';
+    document.getElementById('addUserModal').classList.remove('hidden');
+}
+function openEditUser(id, name, email, role, category) {
+    document.getElementById('userForm').action = '/edit_user';
+    document.getElementById('userModalTitle').innerText = 'Edit User';
+    document.getElementById('userIdField').value = id;
+    document.getElementById('userName').value = name;
+    document.getElementById('userEmail').value = email;
+    document.getElementById('userRole').value = role;
+    document.getElementById('userCategory').value = category;
+    document.getElementById('addUserModal').classList.remove('hidden');
+}
+function openAddProduct() {
+    document.getElementById('prodForm').action = '/add_product';
+    document.getElementById('prodModalTitle').innerText = 'Add Product';
+    document.getElementById('addProductModal').classList.remove('hidden');
+}
+function openEditProduct(id, name, sku, category, price, stock) {
+    document.getElementById('prodForm').action = '/edit_product';
+    document.getElementById('prodModalTitle').innerText = 'Edit Product';
+    document.getElementById('prodIdField').value = id;
+    document.getElementById('prodName').value = name;
+    document.getElementById('prodSku').value = sku;
+    document.getElementById('prodCat').value = category;
+    document.getElementById('prodPrice').value = price;
+    document.getElementById('prodStock').value = stock;
+    document.getElementById('addProductModal').classList.remove('hidden');
+}
+function openAdjustStock(sku, currentStock) {
+    document.getElementById('adjustSku').value = sku;
+    document.getElementById('displaySku').innerText = sku;
+    document.getElementById('adjustQty').value = currentStock;
+    document.getElementById('adjustStockModal').classList.remove('hidden');
+}
+function toggleCategory(role) { 
+    const catField = document.getElementById('categoryField'); 
+    const supField = document.getElementById('supplierFields'); 
+    if(role === 'Admin') { catField.style.display = 'none'; supField.style.display = 'none'; } 
+    else if (role === 'Supplier') { catField.style.display = 'none'; supField.style.display = 'block'; } 
+    else { catField.style.display = 'block'; supField.style.display = 'none'; } 
+}
+</script>
+{% endblock %}

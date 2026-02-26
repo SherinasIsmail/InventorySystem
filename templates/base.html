@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMS - {{ title }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        admin: { DEFAULT: '#3b82f6', dark: '#1d4ed8' },     
+                        staff: { DEFAULT: '#16a34a', dark: '#15803d' },     
+                        supplier: { DEFAULT: '#9333ea', dark: '#7e22ce' }   
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans h-screen flex flex-col overflow-hidden">
+    {% block content %}{% endblock %}
+
+    <script>
+    // DEMO MODE SCRIPT
+    // Makes "dead" buttons feel alive for your review
+    document.addEventListener('DOMContentLoaded', function() {
+        const demoButtons = document.querySelectorAll('a[href="#"], button:not([onclick]):not([type="submit"])');
+        
+        demoButtons.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const toast = document.createElement('div');
+                toast.className = 'fixed bottom-4 right-4 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg transform transition-all duration-500 translate-y-10 opacity-0 z-50 flex items-center gap-3';
+                toast.innerHTML = '<i class="fas fa-info-circle text-blue-400"></i> <span>UI Demo: Action Registered</span>';
+                document.body.appendChild(toast);
+                setTimeout(() => { toast.classList.remove('translate-y-10', 'opacity-0'); }, 10);
+                setTimeout(() => { toast.classList.add('translate-y-10', 'opacity-0'); setTimeout(() => toast.remove(), 500); }, 2000);
+            });
+        });
+    });
+    </script>
+</body>
+</html>

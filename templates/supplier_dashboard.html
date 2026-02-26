@@ -1,0 +1,433 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex h-screen bg-gray-50 font-sans text-gray-800">
+    <aside class="w-64 bg-white border-r border-gray-200 flex flex-col z-20">
+        <div class="h-20 flex items-center px-6 border-b border-gray-100">
+            <div class="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center text-white shadow-purple-200 shadow-lg mr-3">
+                <i class="fas fa-truck text-xl"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-gray-800 text-lg leading-tight">IMS Supplier</h1>
+                <p class="text-xs text-gray-400">Supplier Portal</p>
+            </div>
+        </div>
+        
+        <nav class="flex-1 p-4 space-y-1">
+            <button onclick="switchTab('overview')" id="nav-overview" class="w-full flex items-center px-4 py-3 text-gray-600 hover:bg-purple-50 hover:text-purple-600 rounded-xl transition-all group">
+                <i class="fas fa-th-large w-6 group-hover:text-purple-600 transition-colors"></i> <span class="font-medium">Overview</span>
+            </button>
+            <button onclick="switchTab('info')" id="nav-info" class="w-full flex items-center px-4 py-3 text-gray-600 hover:bg-purple-50 hover:text-purple-600 rounded-xl transition-all group">
+                <i class="fas fa-building w-6 group-hover:text-purple-600 transition-colors"></i> <span class="font-medium">Supplier Information</span>
+            </button>
+            <button onclick="switchTab('delivery')" id="nav-delivery" class="w-full flex items-center px-4 py-3 text-gray-600 hover:bg-purple-50 hover:text-purple-600 rounded-xl transition-all group">
+                <i class="fas fa-truck-loading w-6 group-hover:text-purple-600 transition-colors"></i> <span class="font-medium">Delivery & Restock</span>
+            </button>
+            <a href="#" onclick="switchTab('history')" class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-purple-50 hover:text-purple-700 rounded-xl transition-all font-medium mb-2 group">
+    <i class="fas fa-history text-gray-400 group-hover:text-purple-600 transition-colors w-5"></i>
+    <span>Delivery History</span>
+</a>
+        </nav>
+        
+        <div class="p-4 border-t border-gray-100">
+            <div class="flex items-center gap-3 mb-4 px-2">
+                <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600"><i class="fas fa-user-tie"></i></div>
+                <div class="overflow-hidden">
+                    <p class="text-sm font-bold text-gray-700 truncate">{{ user.name }}</p>
+                    <p class="text-xs text-gray-400 truncate">{{ user.email }}</p>
+                </div>
+            </div>
+            <a href="/logout" class="flex items-center px-4 py-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors text-sm font-bold">
+                <i class="fas fa-sign-out-alt w-6"></i> Logout
+            </a>
+        </div>
+    </aside>
+
+    <main class="flex-1 overflow-y-auto relative p-8" id="main-container">
+    
+    <div id="view-overview" class="view-section space-y-8">
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-800">Supplier Dashboard</h2>
+            <p class="text-gray-500">Manage your deliveries and track restock requests.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div onclick="switchTab('delivery')" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm cursor-pointer hover:border-purple-300 hover:shadow-md transition-all transform hover:-translate-y-1 group">
+        <div class="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center text-white mb-4 text-xl shadow-purple-200 shadow-lg group-hover:scale-110 transition-transform"><i class="fas fa-truck"></i></div>
+        <p class="text-gray-500 text-sm group-hover:text-purple-600 transition-colors">Active Deliveries</p>
+        <h3 class="text-2xl font-bold text-gray-800">{{ stats.active }}</h3>
+    </div>
+    
+    <div onclick="switchTab('delivery')" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm cursor-pointer hover:border-orange-300 hover:shadow-md transition-all transform hover:-translate-y-1 group">
+        <div class="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center text-white mb-4 text-xl shadow-orange-200 shadow-lg group-hover:scale-110 transition-transform"><i class="fas fa-bell"></i></div>
+        <p class="text-gray-500 text-sm group-hover:text-orange-600 transition-colors">Pending Requests</p>
+        <h3 class="text-2xl font-bold text-gray-800">{{ stats.pending }}</h3>
+    </div>
+    
+    <div onclick="switchTab('history')" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm cursor-pointer hover:border-green-300 hover:shadow-md transition-all transform hover:-translate-y-1 group">
+        <div class="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center text-white mb-4 text-xl shadow-green-200 shadow-lg group-hover:scale-110 transition-transform"><i class="fas fa-box"></i></div>
+        <p class="text-gray-500 text-sm group-hover:text-green-600 transition-colors">Delivery History</p>
+        <h3 class="text-2xl font-bold text-gray-800">{{ orders | selectattr('status', 'equalto', 'Delivered') | list | length }}</h3>
+    </div>
+</div>
+
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <h3 class="font-bold text-gray-800 mb-6">Recent Deliveries</h3>
+            <div class="space-y-4">
+                {% for order in orders[:3] %}
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-purple-600 shadow-sm"><i class="fas fa-box"></i></div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 text-sm">{{ order.product_name }}</h4>
+                            <p class="text-xs text-gray-500">Quantity: {{ order.quantity }} units</p>
+                        </div>
+                    </div>
+                    <span class="px-3 py-1 rounded-full text-xs font-bold 
+                        {{ 'bg-green-100 text-green-700' if order.status == 'Delivered' else 
+                           'bg-blue-100 text-blue-700' if order.status == 'In Progress' else 
+                           'bg-orange-100 text-orange-700' }}">
+                        {{ order.status }}
+                    </span>
+                </div>
+                {% else %}
+                <p class="text-gray-400 italic">No recent deliveries.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div> 
+        
+    <div id="view-info" class="view-section hidden space-y-6">
+        <div class="flex justify-between items-center">
+            <div><h2 class="text-2xl font-bold text-gray-800">Supplier Information</h2><p class="text-gray-500">Manage your company details.</p></div>
+            <button type="button" onclick="enableEditMode()" class="px-5 py-2 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700 shadow-sm">
+                <i class="fas fa-pen mr-2"></i> Edit Information
+            </button>
+        </div>
+        
+        <div class="flex gap-6">
+            <div class="w-2/3 bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
+                <form action="/supplier_update_profile" method="POST">
+                    <h3 class="font-bold text-gray-800 mb-6 border-b pb-2">Company Details</h3>
+                    <div class="grid grid-cols-2 gap-6 mb-6">
+                        <div><label class="block text-xs font-bold text-gray-500 mb-1">Company Name</label><input type="text" name="company_name" value="{{ user.company_name | default( user.name ) }}" class="w-full p-3 border border-gray-200 rounded-xl focus:border-purple-500 outline-none bg-gray-50" disabled></div>
+                        <div><label class="block text-xs font-bold text-gray-500 mb-1">Contact Person</label><input type="text" value="{{ user.name }}" class="w-full p-3 border border-gray-200 rounded-xl bg-gray-50" disabled></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-6 mb-6">
+                        <div><label class="block text-xs font-bold text-gray-500 mb-1">Email Address</label><input type="email" value="{{ user.email }}" class="w-full p-3 border border-gray-200 rounded-xl bg-gray-50" disabled></div>
+                        <div><label class="block text-xs font-bold text-gray-500 mb-1">Phone Number</label><input type="text" name="phone" value="{{ user.contact }}" class="editable-field w-full p-3 border border-gray-200 rounded-xl focus:border-purple-500 outline-none bg-gray-50" disabled></div>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Street Address</label>
+                        <input type="text" name="address" value="{{ user.address }}" class="editable-field w-full p-3 border border-gray-200 rounded-xl focus:border-purple-500 outline-none bg-gray-50" disabled>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-6 mb-6">
+                        <div><label class="block text-xs font-bold text-gray-500 mb-1">City</label><input type="text" name="city" value="{{ user.city | default('') }}" class="editable-field w-full p-3 border border-gray-200 rounded-xl focus:border-purple-500 outline-none bg-gray-50" disabled></div>
+                        <div><label class="block text-xs font-bold text-gray-500 mb-1">Country</label><input type="text" name="country" value="{{ user.country | default('') }}" class="editable-field w-full p-3 border border-gray-200 rounded-xl focus:border-purple-500 outline-none bg-gray-50" disabled></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-6 mb-6">
+                        <div><label class="block text-xs font-bold text-gray-500 mb-1">Website</label><input type="text" name="website" value="{{ user.website | default('') }}" class="editable-field w-full p-3 border border-gray-200 rounded-xl focus:border-purple-500 outline-none bg-gray-50" disabled></div>
+                        <div><label class="block text-xs font-bold text-gray-500 mb-1">Tax ID</label><input type="text" name="tax_id" value="{{ user.tax_id | default('') }}" class="editable-field w-full p-3 border border-gray-200 rounded-xl focus:border-purple-500 outline-none bg-gray-50" disabled></div>
+                    </div>
+
+                    <div id="save-action-buttons" class="flex justify-end gap-3 hidden mt-4">
+                        <button type="button" onclick="cancelEditMode()" class="px-6 py-2 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200">Cancel</button>
+                        <button type="submit" class="px-6 py-2 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+            <div class="w-1/3 space-y-6">
+                    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm text-center">
+                        <div class="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center text-purple-600 text-3xl mx-auto mb-4"><i class="fas fa-building"></i></div>
+                        <h3 class="font-bold text-gray-800 text-lg">{{ user.company_name or 'Company Name Not Set' }}</h3>
+                        <p class="text-sm text-gray-500">{{ user.name }}</p>
+                        <div class="mt-4 text-left space-y-2 text-sm text-gray-600">
+                            <p><i class="fas fa-envelope w-6 text-gray-400"></i> {{ user.email }}</p>
+                            <p><i class="fas fa-phone w-6 text-gray-400"></i> {{ user.contact }}</p>
+                            <p><i class="fas fa-map-marker-alt w-6 text-gray-400"></i> {{ user.address }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-purple-50 p-6 rounded-2xl border border-purple-100">
+                        <h4 class="font-bold text-purple-900 mb-3">Products Supplied</h4>
+                        <div class="flex flex-wrap gap-2">
+                            {% for group in products|groupby('category') %}
+                        <span class="px-3 py-1 bg-white text-purple-700 rounded-lg text-xs font-bold shadow-sm">{{ group.grouper }}</span>
+                    {% else %}
+                        <p class="text-xs text-purple-400 italic">No products available.</p>
+                    {% endfor %}
+                        </div>
+                    </div>
+                </div>
+        </div>
+    </div>
+
+    <div id="view-delivery" class="view-section hidden space-y-8">
+        <div><h2 class="text-2xl font-bold text-gray-800">Delivery & Restock Alerts</h2><p class="text-gray-500">Manage requests and notifications.</p></div>
+
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+            <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="fas fa-bell text-red-500"></i> Active Low Stock Alerts</h3>
+            <div class="space-y-4">
+                {% set alerted_skus = orders | map(attribute='sku') | list %}
+                {% for p in products if p.stock < p.min_stock and p.sku not in alerted_skus %}
+                <div class="bg-red-50 border border-red-100 p-4 rounded-xl flex justify-between items-center">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-red-500 shadow-sm"><i class="fas fa-exclamation-triangle"></i></div>
+                        <div>
+                            <h4 class="font-bold text-gray-800">{{ p.name }}</h4>
+                            <p class="text-xs text-red-600">Current: {{ p.stock }} | Min: {{ p.min_stock }}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="flex flex-col">
+                            <label class="text-[10px] text-gray-400 font-bold uppercase mb-1">Quantity</label>
+                            <input type="number" id="qty-{{ p.sku }}" value="25" min="1" class="w-20 px-3 py-2 border border-red-200 rounded-lg text-sm">
+                        </div>
+                        <button onclick="acknowledgeRestock('{{p.sku}}', '{{p.name}}')" class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-bold mt-5">Acknowledge</button>
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-gray-400 italic py-4">All stock levels are currently healthy or already acknowledged.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+            <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="fas fa-truck text-blue-500"></i> Current Delivery Orders</h3>
+            <div class="space-y-4">
+                {% for order in orders if order.status != 'Delivered' %}
+                <div class="bg-gray-50 border border-gray-100 p-6 rounded-xl flex justify-between items-center">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 {{ 'bg-orange-100 text-orange-600' if order.status == 'Pending' else 'bg-blue-100 text-blue-600' }} rounded-xl flex items-center justify-center text-xl">
+                            <i class="fas {{ 'fa-clock' if order.status == 'Pending' else 'fa-shipping-fast' }}"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 text-lg">{{ order.product_name }}</h4>
+                            <p class="text-sm text-gray-500">Quantity: <strong>{{ order.quantity }} units</strong></p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                            <p class="text-xs text-gray-400 mb-2">Status: <span class="font-bold text-gray-800">{{ order.status }}</span></p>
+                            
+                            {% if order.status == 'In Progress' %}
+                                <button onclick="updateStatus({{ order.id }}, 'Delivered')" class="px-5 py-2 bg-green-600 hover:bg-green-700 transition-colors text-white rounded-lg font-bold text-sm shadow-sm">
+                                    <i class="fas fa-check mr-1"></i> Mark Delivered
+                                </button>
+                            {% else %}
+                                <button onclick="updateStatus({{ order.id }}, 'In Progress')" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 transition-colors text-white rounded-lg font-bold text-sm shadow-sm">
+                                    <i class="fas fa-box-open mr-1"></i> Start Processing
+                                </button>
+                            {% endif %}
+                        </div>
+                </div>
+                {% else %}
+                <p class="text-gray-400 italic py-4">No active delivery requests.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+            <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <i class="fas fa-check-circle text-green-500"></i> Product delivered
+            </h3>
+            
+            <div class="space-y-4">
+                {% for order in orders if order.status == 'Delivered' %}
+                <div class="bg-gray-50 border border-gray-100 p-6 rounded-xl flex justify-between items-center shadow-sm">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-green-100 text-green-600 rounded-xl flex items-center justify-center text-xl">
+                            <i class="fas fa-box-open"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 text-lg">{{ order.product_name }}</h4>
+                            <p class="text-sm text-gray-500">Delivered Quantity: <strong>{{ order.quantity }} units</strong></p>
+                        </div>
+                    </div>
+                    
+                    <div class="text-right">
+                        <span class="px-4 py-1.5 bg-green-100 text-green-700 rounded-lg text-sm font-bold border border-green-200 shadow-sm">
+                            <i class="fas fa-check mr-1"></i> Delivered
+                        </span>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-6 bg-gray-50 rounded-xl border border-gray-100">
+                    <i class="fas fa-history text-gray-300 text-3xl mb-3"></i>
+                    <p class="text-gray-400 italic text-sm">No completed deliveries yet.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div> 
+<div id="view-history" class="view-section hidden space-y-6">
+        <div class="flex justify-between items-end">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-800">Complete Delivery History</h2>
+                <p class="text-gray-500 mt-1">A full log of all your successfully delivered products.</p>
+            </div>
+            <button onclick="exportTableToCSV('Delivery_History.csv')" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-xl text-sm font-bold hover:bg-gray-200 transition-colors">
+                <i class="fas fa-download mr-2"></i> Export Log
+            </button>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table id="historyTable" class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50 border-b border-gray-100 text-gray-500 text-sm">
+                            <th class="p-4 font-semibold">Order ID</th>
+                            <th class="p-4 font-semibold">Product Name</th>
+                            <th class="p-4 font-semibold">Quantity Supplied</th>
+                            <th class="p-4 font-semibold text-right">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        {% for order in orders if order.status == 'Delivered' %}
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="p-4 text-gray-800 font-medium">#ORD-{{ order.id }}</td>
+                            <td class="p-4 text-gray-800 font-bold">{{ order.product_name }}</td>
+                            <td class="p-4 text-gray-600">{{ order.quantity }} units</td>
+                            <td class="p-4 text-right">
+                                <span class="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-bold border border-green-100">
+                                    <i class="fas fa-check mr-1"></i> Delivered
+                                </span>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="p-12 text-center">
+                                <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center text-gray-300 mx-auto mb-3 text-2xl">
+                                    <i class="fas fa-folder-open"></i>
+                                </div>
+                                <p class="text-gray-400 italic">Your delivery history is currently empty.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    </main>
+</div>
+
+<script>
+function switchTab(id) {
+    localStorage.setItem('supplierActiveTab', id);
+    document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+    document.getElementById('view-' + id).classList.remove('hidden');
+    document.querySelectorAll('nav button').forEach(btn => {
+        btn.classList.remove('bg-purple-50', 'text-purple-600');
+        btn.classList.add('text-gray-600');
+    });
+    document.getElementById('nav-' + id).classList.add('bg-purple-50', 'text-purple-600');
+}
+document.addEventListener("DOMContentLoaded", function() {
+    // Check for saved tab, default to 'overview' if empty
+    const savedTab = localStorage.getItem('supplierActiveTab') || 'overview';
+    switchTab(savedTab); 
+});
+
+// REAL ORDER UPDATE
+function updateStatus(orderId, newStatus) {
+    if(!confirm("Change status to " + newStatus + "?")) return;
+    
+    const formData = new FormData();
+    formData.append('order_id', orderId);
+    formData.append('status', newStatus);
+    
+    fetch('/supplier_update_status', { method: 'POST', body: formData })
+    .then(res => res.json())
+    .then(data => {
+        if(data.status === 'success') {
+            location.reload();
+        } else {
+            alert("Error: " + data.message);
+        }
+    });
+}
+
+// REAL ACKNOWLEDGE LOGIC
+// UPDATED ACKNOWLEDGE LOGIC
+function acknowledgeRestock(sku, name) {
+    // 1. Grab the specific quantity typed into the input box
+    const qtyInput = document.getElementById('qty-' + sku);
+    const quantity = qtyInput ? qtyInput.value : 5;
+
+    if(!confirm(`Create a restock shipment for ${quantity} units of ${name}?`)) return;
+
+    const formData = new FormData();
+    formData.append('sku', sku);
+    formData.append('quantity', quantity); // Pass the custom quantity to Python
+
+    fetch('/supplier_acknowledge_alert', { method: 'POST', body: formData })
+    .then(res => res.json())
+    .then(data => {
+        if(data.status === 'success') {
+            alert(data.message);
+            location.reload(); 
+        } else {
+            alert("Error: " + data.message);
+        }
+    });
+}
+
+function enableEditMode() {
+            const fields = document.querySelectorAll('.editable-field');
+            fields.forEach(field => {
+                field.disabled = false;
+                field.classList.remove('bg-gray-50');
+                field.classList.add('bg-white');
+            });
+            document.getElementById('save-action-buttons').classList.remove('hidden');
+        }
+
+        function cancelEditMode() {
+            const fields = document.querySelectorAll('.editable-field');
+            fields.forEach(field => {
+                field.disabled = true;
+                field.classList.remove('bg-white');
+                field.classList.add('bg-gray-50');
+            });
+            document.getElementById('save-action-buttons').classList.add('hidden');
+        }
+        
+// --- Dynamic CSV Export Function ---
+function exportTableToCSV(filename) {
+    let csv = [];
+    // Grab the specific table we want to export
+    let rows = document.querySelectorAll("table#historyTable tr");
+    
+    for (let i = 0; i < rows.length; i++) {
+        let row = [], cols = rows[i].querySelectorAll("td, th");
+        
+        // Loop through columns and clean up the text
+        for (let j = 0; j < cols.length; j++) {
+            // Remove line breaks and extra spaces
+            let data = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, "").trim();
+            // Escape double quotes to prevent CSV breaking
+            data = data.replace(/"/g, '""');
+            // Wrap text in quotes
+            row.push('"' + data + '"');
+        }
+        csv.push(row.join(","));
+    }
+
+    // Create the CSV file and trigger download
+    downloadCSV(csv.join("\n"), filename);
+}
+
+function downloadCSV(csv, filename) {
+    let csvFile = new Blob([csv], {type: "text/csv"});
+    let downloadLink = document.createElement("a");
+    
+    // Create a temporary link, click it, and delete it
+    downloadLink.download = filename;
+    downloadLink.href = window.URL.createObjectURL(csvFile);
+    downloadLink.style.display = "none";
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,430 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex h-screen bg-gray-50 font-sans text-gray-800">
+    <aside class="w-64 bg-white border-r border-gray-200 flex flex-col z-20">
+        <div class="h-20 flex items-center px-6 border-b border-gray-100">
+            <div class="w-10 h-10 bg-green-600 rounded-xl flex items-center justify-center text-white shadow-green-200 shadow-lg mr-3">
+                <i class="fas fa-box-open text-xl"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-gray-800 text-lg leading-tight">{{ session['user'] }}</h1>
+                <p class="text-xs text-gray-400">Inventory Module</p>
+            </div>
+        </div>
+        
+        <div class="px-6 py-4">
+            <p class="text-xs font-bold text-gray-400 mb-2 uppercase">Assigned Section:</p>
+            <span class="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-sm font-bold border border-green-200 w-full block text-center">
+                {{ user_category if user_category else 'General' }}
+            </span>
+        </div>
+
+        <nav class="flex-1 p-4 space-y-1">
+            <button onclick="switchTab('overview')" id="nav-overview" class="w-full flex items-center px-4 py-3 text-gray-600 hover:bg-green-50 hover:text-green-600 rounded-xl transition-all group">
+                <i class="fas fa-chart-bar w-6 group-hover:text-green-600 transition-colors"></i> <span class="font-medium">Overview</span>
+            </button>
+            <button onclick="switchTab('products')" id="nav-products" class="w-full flex items-center px-4 py-3 text-gray-600 hover:bg-green-50 hover:text-green-600 rounded-xl transition-all group">
+                <i class="fas fa-tags w-6 group-hover:text-green-600 transition-colors"></i> <span class="font-medium">My Products</span>
+            </button>
+            <button onclick="switchTab('stock')" id="nav-stock" class="w-full flex items-center px-4 py-3 text-gray-600 hover:bg-green-50 hover:text-green-600 rounded-xl transition-all group">
+                <i class="fas fa-sync-alt w-6 group-hover:text-green-600 transition-colors"></i> <span class="font-medium">Stock Update</span>
+            </button>
+            <button onclick="switchTab('billing'); setTimeout(() => document.getElementById('barcode').focus(), 250);" id="nav-billing" class="w-full flex items-center px-4 py-3 text-gray-600 hover:bg-green-50 hover:text-green-600 rounded-xl transition-all group">
+                <i class="fas fa-cash-register w-6 group-hover:text-green-600 transition-colors"></i> <span class="font-medium">Billing</span>
+            </button>
+        </nav>
+        
+        <div class="p-4 border-t border-gray-100">
+            <a href="/logout" class="flex items-center px-4 py-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors text-sm font-bold">
+                <i class="fas fa-sign-out-alt w-6"></i> Logout
+            </a>
+        </div>
+    </aside>
+
+    <main class="flex-1 overflow-y-auto relative p-8" id="main-container">
+        
+        <div id="view-overview" class="view-section space-y-8">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-gray-800">Staff Dashboard</h2>
+                <p class="text-gray-500">Welcome back. Manage your assigned category: <strong>{{ user_category }}</strong></p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                    <div class="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center text-white mb-4 text-xl shadow-green-200 shadow-lg"><i class="fas fa-box"></i></div>
+                    <p class="text-gray-500 text-sm">My Products</p><h3 class="text-2xl font-bold text-gray-800">{{ stats.products }}</h3>
+                </div>
+                <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                    <div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center text-white mb-4 text-xl shadow-blue-200 shadow-lg"><i class="fas fa-sync"></i></div>
+                    <p class="text-gray-500 text-sm">Updates Today</p><h3 class="text-2xl font-bold text-gray-800">{{ stats.updates }}</h3>
+                </div>
+                <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                    <div class="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center text-white mb-4 text-xl shadow-purple-200 shadow-lg"><i class="fas fa-file-invoice"></i></div>
+                    <p class="text-gray-500 text-sm">Bills Generated</p><h3 class="text-2xl font-bold text-gray-800">{{ stats.transactions }}</h3>
+                </div>
+            </div>
+
+            <div class="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
+                <h3 class="font-bold text-gray-800 mb-6">Quick Actions</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <button onclick="switchTab('products')" class="p-4 border border-gray-200 rounded-xl flex items-center gap-4 hover:border-green-500 hover:bg-green-50 transition-all text-left">
+                        <div class="text-green-600 text-2xl"><i class="fas fa-search"></i></div><div><h4 class="font-bold text-gray-800">Quick Browse</h4><p class="text-xs text-gray-500">View products list</p></div>
+                    </button>
+                    <button onclick="switchTab('stock')" class="p-4 border border-gray-200 rounded-xl flex items-center gap-4 hover:border-blue-500 hover:bg-blue-50 transition-all text-left">
+                        <div class="text-blue-600 text-2xl"><i class="fas fa-sync-alt"></i></div><div><h4 class="font-bold text-gray-800">Update Stock</h4><p class="text-xs text-gray-500">Adjust inventory</p></div>
+                    </button>
+                    <button onclick="switchTab('billing')" class="p-4 border border-gray-200 rounded-xl flex items-center gap-4 hover:border-purple-500 hover:bg-purple-50 transition-all text-left">
+                        <div class="text-purple-600 text-2xl"><i class="fas fa-cash-register"></i></div><div><h4 class="font-bold text-gray-800">Process Sale</h4><p class="text-xs text-gray-500">Create transaction</p></div>
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-8">
+                <h3 class="font-bold text-gray-800 mb-4">Your Recent Activity</h3>
+                <div class="space-y-3">
+                    {% for log in logs %}
+                    <div class="bg-white p-4 rounded-xl border border-gray-100 flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 bg-gray-50 rounded-full flex items-center justify-center text-gray-400"><i class="fas fa-history"></i></div>
+                            <div><p class="text-sm font-bold text-gray-800">{{ log.details }}</p></div>
+                        </div>
+                        <span class="text-xs text-gray-400">{{ log.timestamp }}</span>
+                    </div>
+                    {% else %}
+                    <p class="text-gray-400 italic">No activity yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div id="view-products" class="view-section hidden space-y-6">
+            <div class="mb-6"><h2 class="text-2xl font-bold text-gray-800">My Products</h2><p class="text-gray-500">Managing category: {{ user_category }}</p></div>
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {% for p in products %}
+                <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all">
+                    <div class="flex justify-between items-start mb-4"><span class="px-2 py-1 bg-green-50 text-green-700 rounded text-xs font-bold">{{ p.category }}</span></div>
+                    <h3 class="font-bold text-gray-800 text-sm mb-1">{{ p.name }}</h3>
+                    <p class="text-xs text-gray-400 font-mono mb-4">{{ p.sku }}</p>
+                    <div class="flex justify-between items-end mb-4">
+                        <span class="font-bold text-gray-800">₹{{ p.price }}</span>
+                        <span class="text-xs font-bold {{ 'text-green-600' if p.stock >= p.min_stock else 'text-red-500' }}">
+                            {{ p.stock }} units
+                        </span>
+                    </div>
+                    <button onclick="showDetails('{{p.name}}', '{{p.sku}}', '{{p.category}}', {{p.price}}, {{p.stock}})" class="w-full py-2 bg-green-500 text-white text-xs font-bold rounded-lg hover:bg-green-600">View Details</button>
+                </div>
+                {% else %}
+                <p class="text-gray-500">No products found in your category.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div id="view-stock" class="view-section hidden space-y-6">
+            <div class="flex justify-between items-end mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800">Stock Update</h2>
+                    <p class="text-gray-500 text-sm">Update stock or add new items to <strong>{{ user_category }}</strong>.</p>
+                </div>
+                <button onclick="document.getElementById('staffAddProductModal').classList.remove('hidden')" class="px-4 py-2 bg-gray-800 text-white rounded-xl text-sm font-bold hover:bg-black shadow-lg shadow-gray-200 flex items-center gap-2">
+                    <i class="fas fa-plus"></i> Add New Item
+                </button>
+            </div>
+
+            <div class="flex gap-6 h-[500px]">
+                <div class="w-2/3 bg-white border border-gray-200 rounded-2xl overflow-hidden flex flex-col">
+                    <div class="p-4 border-b border-gray-100 bg-gray-50"><input type="text" id="stockSearch" onkeyup="searchStock()" placeholder="Search product..." class="w-full bg-white border border-gray-200 rounded-lg px-4 py-2 text-sm outline-none"></div>
+                    <div class="overflow-y-auto p-2 space-y-2 flex-1">
+                        {% for p in products %}
+                        <div onclick="selectStock('{{p.sku}}', '{{p.name}}', {{p.stock}})" class="stock-item p-4 rounded-xl border border-gray-100 hover:border-green-500 cursor-pointer flex justify-between items-center transition-all bg-white">
+                            <div><h4 class="font-bold text-sm text-gray-800 stock-name">{{ p.name }}</h4><p class="text-xs text-gray-400">{{ p.sku }}</p></div>
+                            <div class="text-right"><p class="text-xs text-gray-400">Current</p><p class="font-bold text-green-600">{{ p.stock }}</p></div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="w-1/3 bg-white border border-gray-200 rounded-2xl p-6 flex flex-col justify-center text-center" id="stockPanel">
+                    <i class="fas fa-box-open text-4xl text-gray-200 mb-4"></i>
+                    <p class="text-gray-400 text-sm">Select a product to update stock.</p>
+                </div>
+                <div class="w-1/3 bg-white border border-gray-200 rounded-2xl p-6 hidden" id="stockFormPanel">
+                    <h3 class="font-bold text-lg text-gray-800 mb-1" id="stkName">Name</h3>
+                    <p class="text-xs text-gray-400 mb-6" id="stkSku">SKU</p>
+                    <form id="stockUpdateForm" onsubmit="submitStockUpdate(event)">
+                        <input type="hidden" name="sku" id="formSku">
+                        <label class="text-xs font-bold text-gray-500">Add Quantity (Negative to Remove)</label>
+                        <input type="number" name="quantity" class="w-full border border-gray-200 rounded-xl p-3 mt-1 mb-4 font-bold" placeholder="e.g., 10 or -5" required>
+                        <button type="submit" class="w-full py-3 bg-green-600 text-white rounded-xl font-bold">Update Stock</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="mt-8">
+                <h3 class="font-bold text-gray-800 mb-4">Recent Stock Adjustments</h3>
+                <div class="space-y-3">
+                    {% for log in logs if 'STOCK' in log.action or 'PROD' in log.action %}
+                    <div class="bg-white p-4 rounded-xl border border-gray-100 flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600"><i class="fas fa-sync"></i></div>
+                            <div><p class="font-bold text-sm text-gray-800">{{ log.details }}</p></div>
+                        </div>
+                        <span class="text-xs text-gray-400">{{ log.timestamp }}</span>
+                    </div>
+                    {% else %}
+                    <p class="text-gray-400 italic">No recent stock adjustments.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div id="view-billing" class="view-section hidden space-y-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Billing & Checkout</h2>
+            <div class="flex gap-6 h-[600px]">
+                <div class="w-2/3 flex flex-col gap-4">
+                    <div class="bg-green-50 p-5 rounded-2xl border border-green-100 shadow-sm flex items-center gap-4 mb-2">
+    <div class="w-14 h-14 bg-green-200 text-green-700 rounded-xl flex items-center justify-center text-2xl shadow-sm">
+        <i class="fas fa-barcode"></i>
+    </div>
+    
+    <div class="flex-1">
+        <label for="barcode" class="block text-sm font-bold text-green-900 mb-1">
+            Scan Barcode
+        </label>
+        <input type="text" id="barcode" autofocus placeholder="Scan Barcode / Enter SKU (e.g. LAP-001)" 
+            class="w-full p-3 rounded-xl border border-green-200 focus:outline-none focus:ring-2 focus:ring-green-500 bg-white text-gray-800 font-medium uppercase"
+            onkeypress="handleBarcodeScan(event)">
+    </div>
+    
+    <button type="button" onclick="scanItem()" class="px-6 py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition-colors shadow-md flex items-center gap-2">
+        <i class="fas fa-plus"></i> Add
+    </button>
+</div>
+                    <div class="grid grid-cols-2 gap-3 overflow-y-auto pr-2" style="max-height: 500px;">
+                        {% for p in products %}
+                        <div onclick="addToCart('{{p.name}}', {{p.price}}, '{{p.sku}}')" class="bg-white p-4 rounded-xl border border-gray-100 hover:border-green-500 cursor-pointer transition-all">
+                            <div class="flex justify-between"><h4 class="font-bold text-sm text-gray-800">{{ p.name }}</h4><span class="text-xs text-gray-400">{{ p.sku }}</span></div>
+                            <div class="flex justify-between mt-2"><span class="font-bold text-green-600">₹{{ p.price }}</span><span class="text-xs bg-gray-100 px-2 py-1 rounded text-gray-500">Stock: {{ p.stock }}</span></div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="w-1/3 bg-white border border-gray-200 rounded-2xl p-6 flex flex-col">
+                    <h3 class="font-bold text-gray-800 mb-4 border-b pb-2">Current Bill</h3>
+                    <div id="cartItems" class="flex-1 overflow-y-auto space-y-2 mb-4">
+                        <p class="text-gray-400 text-center text-sm mt-10">Cart is empty</p>
+                    </div>
+                    <div class="border-t pt-4">
+                        <div class="flex justify-between mb-4"><span class="text-gray-500">Total</span><span class="font-bold text-xl text-gray-800" id="cartTotal">₹0</span></div>
+                        <button onclick="checkout()" class="w-full py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700">Print & Checkout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="detailsModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white rounded-2xl p-6 w-96 shadow-2xl">
+            <h3 class="text-lg font-bold mb-2 text-gray-800">Product Details</h3>
+            <div id="modalContent" class="text-sm text-gray-600 space-y-2 mb-6"></div>
+            <button onclick="document.getElementById('detailsModal').classList.add('hidden')" class="w-full py-2 bg-gray-200 text-gray-700 rounded-lg font-bold">Close</button>
+        </div>
+    </div>
+
+    <div id="staffAddProductModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white rounded-2xl p-6 w-96 shadow-2xl">
+            <h3 class="text-lg font-bold mb-4 text-gray-800">Add New Item</h3>
+            <form action="/staff_add_product" method="POST" class="space-y-3">
+                
+                <div class="bg-green-50 p-3 rounded-lg border border-green-100 mb-3">
+                    <p class="text-xs text-green-700 font-bold uppercase">Assigned Category</p>
+                    <p class="font-bold text-gray-800">{{ user_category }}</p>
+                    <input type="hidden" name="category" value="{{ user_category }}">
+                </div>
+
+                <input type="text" name="name" placeholder="Product Name" class="w-full border border-gray-200 p-2.5 rounded-lg text-sm" required>
+                <input type="text" name="sku" placeholder="SKU (e.g. ELEC-001)" class="w-full border border-gray-200 p-2.5 rounded-lg text-sm" required>
+                <div class="flex gap-2">
+                    <input type="number" name="price" placeholder="Price (₹)" class="w-full border border-gray-200 p-2.5 rounded-lg text-sm" required>
+                    <input type="number" name="stock" placeholder="Initial Stock" class="w-full border border-gray-200 p-2.5 rounded-lg text-sm" required>
+                </div>
+                <div class="flex gap-2">
+                    <input type="number" name="min_stock" placeholder="Min Alert Level" class="w-full border border-gray-200 p-2.5 rounded-lg text-sm" required>
+                    <input type="text" name="supplier" placeholder="Supplier Name" class="w-full border border-gray-200 p-2.5 rounded-lg text-sm" required>
+                </div>
+
+                <div class="flex gap-2 mt-4">
+                    <button type="button" onclick="document.getElementById('staffAddProductModal').classList.add('hidden')" class="flex-1 py-2 bg-gray-100 rounded-lg text-sm font-bold text-gray-600">Cancel</button>
+                    <button type="submit" class="flex-1 py-2 bg-green-600 text-white rounded-lg text-sm font-bold hover:bg-green-700">Save Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+const allProducts = [
+    {% for p in products %}
+    { sku: "{{p.sku}}", name: "{{p.name}}", price: {{p.price}}, stock: {{p.stock}} },
+    {% endfor %}
+];
+
+function switchTab(tabId) {
+    localStorage.setItem('activeTab', tabId);
+    document.querySelectorAll('.view-section').forEach(d => d.classList.add('hidden'));
+    document.getElementById('view-'+tabId).classList.remove('hidden');
+    document.querySelectorAll('nav button').forEach(b => {
+        b.classList.remove('bg-green-50', 'text-green-600'); 
+        b.classList.add('text-gray-600');
+    });
+    document.getElementById('nav-'+tabId).classList.add('bg-green-50', 'text-green-600');
+}
+document.addEventListener("DOMContentLoaded", function() {
+    // Check for a saved tab, otherwise default to 'overview'
+    const savedTab = localStorage.getItem('activeTab') || 'overview';
+    switchTab(savedTab);
+
+    if (tabName === 'billing') {
+        // A tiny 100ms delay ensures the tab is fully visible before focusing
+        setTimeout(() => {
+            document.getElementById('barcode').focus();
+        }, 100);
+    }
+});
+
+function searchStock() {
+    let q = document.getElementById('stockSearch').value.toLowerCase();
+    document.querySelectorAll('.stock-item').forEach(i => {
+        i.style.display = i.querySelector('.stock-name').innerText.toLowerCase().includes(q) ? 'flex' : 'none';
+    });
+}
+function selectStock(sku, name, stock) {
+    document.getElementById('stockPanel').classList.add('hidden');
+    document.getElementById('stockFormPanel').classList.remove('hidden');
+    document.getElementById('stkName').innerText = name;
+    document.getElementById('stkSku').innerText = sku;
+    document.getElementById('formSku').value = sku;
+}
+
+function submitStockUpdate(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    fetch('/staff_update_stock', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.status === 'success') {
+            alert(data.message); // Will say "Removed 5 units" or "Added 10 units"
+            location.reload(); 
+        } else {
+            alert("Error: " + data.message);
+        }
+    });
+}
+
+function showDetails(name, sku, category, price, stock) {
+    const content = `
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>SKU:</strong> ${sku}</p>
+        <p><strong>Category:</strong> ${category}</p>
+        <p><strong>Price:</strong> ₹${price}</p>
+        <p><strong>Stock:</strong> ${stock} units</p>
+    `;
+    document.getElementById('modalContent').innerHTML = content;
+    document.getElementById('detailsModal').classList.remove('hidden');
+}
+
+let cart = [];
+function addToCart(name, price, sku) {
+    cart.push({name, price, sku});
+    updateCartUI();
+}
+function scanItem() {
+    let inputSku = document.getElementById('barcode').value.trim();
+    if(!inputSku) return;
+    let foundProduct = allProducts.find(p => p.sku === inputSku);
+    if (foundProduct) {
+        addToCart(foundProduct.name, foundProduct.price, foundProduct.sku);
+        document.getElementById('barcode').value = ''; 
+    } else {
+        alert("Product not found! Check SKU.");
+    }
+}
+function updateCartUI() {
+    let html = '';
+    let total = 0;
+    if(cart.length === 0) {
+        document.getElementById('cartItems').innerHTML = '<p class="text-gray-400 text-center text-sm mt-10">Cart is empty</p>';
+        document.getElementById('cartTotal').innerText = '₹0';
+        return;
+    }
+    cart.forEach((item, i) => {
+        total += item.price;
+        html += `<div class="flex justify-between items-center p-2 bg-gray-50 rounded"><div class="text-sm"><p class="font-bold">${item.name}</p><p class="text-xs text-gray-500">₹${item.price}</p></div><button onclick="cart.splice(${i},1);updateCartUI()" class="text-red-500"><i class="fas fa-times"></i></button></div>`;
+    });
+    document.getElementById('cartItems').innerHTML = html;
+    document.getElementById('cartTotal').innerText = '₹' + total;
+}
+
+function checkout() {
+    if(cart.length === 0) return alert("Cart is empty!");
+    fetch('/staff_checkout', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({items: cart})
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.status === 'success') {
+            alert("Transaction Complete! Stock Updated.");
+            cart = [];
+            updateCartUI();
+            location.reload(); 
+        } else {
+            alert("Error: " + data.message);
+        }
+    });
+}
+    // 1. Create a mini-database in JavaScript using your Jinja products!
+    // This allows the scanner to instantly look up the price and name based on the SKU.
+    const productDatabase = {
+        {% for p in products %}
+        "{{ p.sku | upper }}": { name: "{{ p.name }}", price: {{ p.price }} },
+        {% endfor %}
+    };
+
+    // 2. Listen for the scanner pressing "Enter"
+    function handleBarcodeScan(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault(); // Stop the page from refreshing
+            scanItem();
+        }
+    }
+
+    // 3. Process the scanned code
+    function scanItem() {
+        let input = document.getElementById('barcode');
+        let scannedSku = input.value.trim().toUpperCase();
+        
+        if (scannedSku === "") return;
+
+        // Check if the scanned SKU exists in our database
+        if (productDatabase[scannedSku]) {
+            let product = productDatabase[scannedSku];
+            
+            // Send it directly to your existing addToCart function!
+            addToCart(product.name, product.price, scannedSku);
+            
+            // Clear the box and keep the cursor there so they can instantly scan the next item
+            input.value = "";
+            input.focus();
+        } else {
+            // If they scan an item that doesn't exist in the system
+            alert("Product not found! Please check the barcode or SKU: " + scannedSku);
+            input.select(); // Highlight the wrong text so they can easily scan over it
+        }
+    }
+</script>
+{% endblock %}
