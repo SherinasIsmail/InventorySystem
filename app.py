@@ -33,7 +33,8 @@ def init_db():
         c.execute('''CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT, email TEXT, password TEXT, role TEXT, assigned_category TEXT, contact TEXT, address TEXT, status TEXT, created_at TEXT,company_name TEXT, city TEXT, country TEXT, website TEXT, tax_id TEXT)''')
         c.execute('''CREATE TABLE IF NOT EXISTS products (id INTEGER PRIMARY KEY, name TEXT, sku TEXT, category TEXT, price REAL, stock INTEGER, supplier TEXT, min_stock INTEGER)''')
         c.execute('''CREATE TABLE IF NOT EXISTS logs (id INTEGER PRIMARY KEY, user TEXT, action TEXT, details TEXT, timestamp TEXT)''')
-        c.execute('''CREATE TABLE IF NOT EXISTS deliveries (id INTEGER PRIMARY KEY, product_name TEXT, sku TEXT, quantity INTEGER, request_date TEXT, status TEXT, supplier TEXT)''')
+        c.execute('''CREATE TABLE IF NOT EXISTS deliveries (id INTEGER PRIMARY KEY, product_name TEXT, sku TEXT, quantity INTEGER, request_date TEXT, status TEXT, supplier TEXT, serial_number TEXT, batch_number TEXT)''')
+        c.execute('''CREATE TABLE IF NOT EXISTS sales (id INTEGER PRIMARY KEY, product_name TEXT, sku TEXT, serial_number TEXT, batch_number TEXT, price REAL, staff_name TEXT, sale_date TEXT)''')
         
         # --- SEED USERS ---
         users = [
@@ -391,37 +392,43 @@ def export_report(report_type):
         req_month = request.args.get('month')
         req_year = request.args.get('year')
 
-        # 2. Your exact base query, ready for filtering
-        base_query = '''
-            SELECT logs.user, logs.details, logs.timestamp, users.assigned_category 
-            FROM logs 
-            LEFT JOIN users ON logs.user = users.name 
-            WHERE logs.action = 'SALE'
-        '''
+        # 2. Base query pointing to the NEW sales table
+        base_query = 'SELECT * FROM sales WHERE 1=1'
+        params = []
 
         # 3. Apply the filters dynamically
         if req_year and req_month and req_day:
-            search_pattern = f"{req_year}-{req_month}-{req_day}%"
-            query = base_query + " AND logs.timestamp LIKE ?"
-            data = conn.execute(query, (search_pattern,)).fetchall()
+            base_query += " AND sale_date LIKE ?"
+            params.append(f"{req_year}-{req_month}-{req_day}%")
             
         elif req_year and req_month:
-            search_pattern = f"{req_year}-{req_month}-%"
-            query = base_query + " AND logs.timestamp LIKE ?"
-            data = conn.execute(query, (search_pattern,)).fetchall()
+            base_query += " AND sale_date LIKE ?"
+            params.append(f"{req_year}-{req_month}-%")
             
         elif req_year:
-            search_pattern = f"{req_year}-%"
-            query = base_query + " AND logs.timestamp LIKE ?"
-            data = conn.execute(query, (search_pattern,)).fetchall()
-            
-        else:
-            data = conn.execute(base_query).fetchall()
+            base_query += " AND sale_date LIKE ?"
+            params.append(f"{req_year}-%")
 
-        # 4. Write exactly the columns you requested
-        writer.writerow(['Staff Name', 'Product Details', 'Timestamp', 'Staff Category'])
+        # Add ordering so newest sales are at the top
+        base_query += " ORDER BY sale_date DESC"
+        
+        # Execute the query
+        data = conn.execute(base_query, tuple(params)).fetchall()
+
+        # 4. Write the exact columns requested by your guide!
+        writer.writerow(['Date & Time', 'Staff Name', 'Product Name', 'SKU', 'Serial Number', 'Batch Number', 'Price'])
+        
         for row in data:
-            writer.writerow([row['user'], row['details'], row['timestamp'], row['assigned_category']])
+            writer.writerow([
+                row['sale_date'], 
+                row['staff_name'], 
+                row['product_name'], 
+                row['sku'], 
+                row['serial_number'], 
+                row['batch_number'], 
+                row['price']
+            ])
+            
         filename = "sales_report.csv"
         
     else:
@@ -771,6 +778,11 @@ def staff_checkout():
             if curr and curr['stock'] > 0:
                 conn.execute('UPDATE products SET stock = stock - 1 WHERE sku = ?', (item['sku'],))
                 log_activity(conn, session.get('user'), 'SALE', f"Sold {item['name']}")
+                today_time = datetime.now().strftime("%Y-%m-%d %H:%M")
+                conn.execute('''
+                    INSERT INTO sales (product_name, sku, serial_number, batch_number, price, staff_name, sale_date)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                ''', (item['name'], item['sku'], item.get('sn', 'N/A'), item.get('bn', 'N/A'), item['price'], session.get('user'), today_time))
             else:
                 return jsonify({'status': 'error', 'message': f"Out of stock: {item['name']}"}), 400
         conn.commit()
