@@ -273,8 +273,8 @@ def admin_dash():
         'value': total_value,
         'revenue': total_revenue,
         'sales_count': total_sales_count,
-        'revenue_data': revenue_history, # Now fully dynamic
-        'sales_vol': sales_history,      # Now fully dynamic
+        'revenue_data': revenue_history, 
+        'sales_vol': sales_history,      
         'days': days_labels,
         'cat_labels': cat_labels,
         'cat_values': cat_values
@@ -392,9 +392,13 @@ def export_report(report_type):
         req_month = request.args.get('month')
         req_year = request.args.get('year')
 
-        # 2. Base query pointing to the NEW sales table
-        base_query = 'SELECT * FROM sales WHERE 1=1'
-        params = []
+        # 2. Your exact base query, ready for filtering
+        base_query = '''
+            SELECT logs.user, logs.details, logs.timestamp, users.assigned_category 
+            FROM logs 
+            LEFT JOIN users ON logs.user = users.name 
+            WHERE logs.action = 'SALE'
+        '''
 
         # 3. Apply the filters dynamically
         if req_year and req_month and req_day:
@@ -415,9 +419,8 @@ def export_report(report_type):
         # Execute the query
         data = conn.execute(base_query, tuple(params)).fetchall()
 
-        # 4. Write the exact columns requested by your guide!
-        writer.writerow(['Date & Time', 'Staff Name', 'Product Name', 'SKU', 'Serial Number', 'Batch Number', 'Price'])
-        
+        # 4. Write exactly the columns you requested
+        writer.writerow(['Staff Name', 'Product Details', 'Timestamp', 'Staff Category'])
         for row in data:
             writer.writerow([
                 row['sale_date'], 
@@ -435,7 +438,6 @@ def export_report(report_type):
         # Fetch products sorted by category first, and then alphabetically by name
         products = conn.execute('SELECT * FROM products ORDER BY category ASC, name ASC').fetchall()
         
-        # Added 'Status' to the very end of the header row
         writer.writerow(['Sl. No.', 'Name', 'SKU', 'Category', 'Price', 'Stock', 'Supplier', 'Status'])
         
         for index, p in enumerate(products, start=1):
@@ -449,7 +451,6 @@ def export_report(report_type):
             else:
                 status = 'In Stock'
                 
-            # 2. Write the row, including our new 'status' variable at the end
             writer.writerow([
                 index, 
                 p['name'], 
@@ -513,7 +514,7 @@ def export_activities():
     if 'user' not in session or session.get('role') != 'Admin':
         return redirect('/')
     
-    # 1. Catch the search word sent by your new JavaScript button!
+    # 1. Catch the search word sent by JavaScript button!
     search_word = request.args.get('search', '').strip()
     
     conn = get_db_connection()
@@ -597,11 +598,11 @@ def get_sales_data(period):
 
     for i in range(days - 1, -1, -1):
         date_obj = anchor_date - timedelta(days=i)
-        date_str = date_obj.strftime('%Y-%m-%d') # Matches your '2024-11-24' format
+        date_str = date_obj.strftime('%Y-%m-%d') # Matches '2024-11-24' format
         
         label = date_obj.strftime('%a') if period == 'week' else date_obj.strftime('%d %b')
         
-        # Use LIKE to ignore the "14:30" part of your database timestamp
+        # Use LIKE to ignore the "14:30" part of database timestamp
         res = conn.execute('''
             SELECT SUM(p.price), COUNT(l.id)
             FROM logs l 
@@ -617,7 +618,6 @@ def get_sales_data(period):
     total_sales = sum(sales)
     avg_order = round(total_revenue / max(total_sales, 1))
 
-    # Calculate past period for the percentage change text
     # Calculate past period for the percentage change text
     past_revenue = []
     past_sales = [] # NEW: Tracking past sales
@@ -661,8 +661,8 @@ def get_sales_data(period):
         'total_sales': total_sales,
         'avg_value': avg_order,
         'revenue_change': rev_change,
-        'sales_change': sales_change,  # NEW
-        'avg_change': avg_change       # NEW
+        'sales_change': sales_change,  
+        'avg_change': avg_change       
     })
     
 @app.route('/update_status/<int:id>/<status>')
@@ -678,7 +678,7 @@ def update_status(id, status):
         conn.commit()
         conn.close()
         
-        # 3. Send a success message back to your JavaScript
+        # 3. Send a success message back to JavaScript
         return jsonify({'success': True, 'message': f'User {id} status changed to {status}'})
         
     except Exception as e:
