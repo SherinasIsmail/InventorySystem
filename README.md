@@ -39,7 +39,7 @@ Plaintext
 ⚙️ Setup & Installation
 Clone the Repository:
 Bash
-git clone https://github.com/NavriReddy/QuickScan-Inventory.git
+git clone https://github.com/SherinasIsmail/InventorySystem.git
 
 Install Flask:
 Bash
