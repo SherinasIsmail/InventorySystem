@@ -1,0 +1,16 @@
+# Python temporary files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Database file (Important: Let the user generate their own)
+inventory.db
+
+# Environments
+.venv/
+venv/
+ENV/
+
+# OS generated files
+.DS_Store
+Thumbs.db
